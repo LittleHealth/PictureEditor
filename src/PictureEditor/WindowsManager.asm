@@ -44,6 +44,12 @@ IHandleModeChange PROC USES ebx ecx,
 		mov ecx, IDM_MODE_ELLIPSE
 	.ELSEIF bx == IDM_POLYGON ;¶à±ßÐÎ
 		mov ecx, IDM_MODE_POLYGON
+	.ELSEIF bx == IDM_BACKGROUND_COLOR
+		mov ecx, IDM_MODE_BACKGROUBD_COLOR
+		INVOKE IHandleColor, hWnd, 0
+	.ELSEIF bx == IDM_FRAME_COLOR
+		mov ecx, IDM_MODE_FRAME_COLOR
+		INVOKE IHandleColor, hWnd, 1
 	.ENDIF
 	mov CurrentMode, ecx
 	pop ecx
@@ -237,4 +243,32 @@ IHandlePaint PROC USES ecx,
 	pop ecx
 	ret
 IHandlePaint ENDP
+
+IHandleColor PROC hWnd:HWND, Command:DWORD
+	local cc:CHOOSECOLOR
+	extern hInstance:HINSTANCE
+
+    mov cc.lStructSize,sizeof cc
+    mov eax,hWnd
+    mov cc.hwndOwner,eax
+    mov eax,hInstance
+    mov cc.hInstance,eax
+    mov cc.rgbResult,0
+    mov eax,offset ArrayCustom_Color
+    mov cc.lpCustColors,eax
+    mov cc.Flags,CC_FULLOPEN or CC_RGBINIT
+    mov cc.lCustData,0
+    mov cc.lpfnHook,0
+    mov cc.lpTemplateName,0
+    INVOKE ChooseColor,addr cc
+    mov eax,cc.rgbResult
+	mov ecx, Command
+    .IF ecx == Command
+        mov Background_Color, eax
+    .ELSEIF ecx == Command
+        mov Frame_Color, eax
+    .ENDIF
+    ret
+IHandleColor ENDP
+
 end

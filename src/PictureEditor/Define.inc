@@ -62,7 +62,7 @@ IHandleTextDialog			PROTO :HWND,:WPARAM,:LPARAM ;将对话框输入文字存储，用于绘制
 ;菜单，控制等函数
 ICreateMenu					PROTO ;建立菜单
 
-ISelectColor				PROTO :HWND, :DWORD
+IHandleColor				PROTO :HWND, :DWORD
 
 ;定义各种常量
 .data
@@ -74,6 +74,10 @@ ISelectColor				PROTO :HWND, :DWORD
 
 	;字符上限
 	MAX_LENGTH				WORD 100
+
+	Background_Color 		DWORD 0ffffffh
+	Frame_Color 			DWORD 0
+	ArrayCustom_Color		DWORD 16 DUP(0)
 
 	;资源文件
 	IDD_DIALOG1				WORD 104
