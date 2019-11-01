@@ -7,10 +7,12 @@ option casemap:none
 
 include Define.inc
 
-
 .code
 ;处理WM_COMMAND(菜单点击)导致的模式变化
-IHandleModeChange PROC hWnd:HWND,wParam:WPARAM,lParam:LPARAM
+IHandleModeChange PROC USES ebx ecx,
+	hWnd:HWND,wParam:WPARAM,lParam:LPARAM
+	push ebx
+	push ecx
 	extern CurrentMode:DWORD
 	extern CurrentPointNum:DWORD
 	mov ebx, wParam
@@ -44,11 +46,17 @@ IHandleModeChange PROC hWnd:HWND,wParam:WPARAM,lParam:LPARAM
 		mov ecx, IDM_MODE_POLYGON
 	.ENDIF
 	mov CurrentMode, ecx
+	pop ecx
+	pop ebx
 	ret
 IHandleModeChange ENDP 
 
 ;处理鼠标移动事件(擦除和写入)
-IHandleMouseMove PROC hWnd:HWND,wParam:WPARAM,lParam:LPARAM
+IHandleMouseMove PROC USES ebx ecx edx,
+	hWnd:HWND,wParam:WPARAM,lParam:LPARAM
+	push ebx
+	push ecx
+	push edx
 	extern CurrentMode: DWORD
 	extern MouseStatus: DWORD
 	extern StartX: DWORD
@@ -91,11 +99,16 @@ IHandleMouseMove PROC hWnd:HWND,wParam:WPARAM,lParam:LPARAM
 			INVOKE InvalidateRect, hWnd, ADDR WorkRegion, 0
 		.ENDIF
 	.ENDIF
+	pop edx
+	pop ecx
+	pop ebx
 	ret
 IHandleMouseMove ENDP
 
 ;处理鼠标按下事件(擦除和写入)
-IHandleButtonDown PROC hWnd:HWND,wParam:WPARAM,lParam:LPARAM
+IHandleButtonDown PROC USES ecx,
+	hWnd:HWND,wParam:WPARAM,lParam:LPARAM
+	push ecx
 	extern CurrentMode: DWORD
 	extern MouseStatus:DWORD
 	mov ecx, CurrentMode
@@ -103,11 +116,15 @@ IHandleButtonDown PROC hWnd:HWND,wParam:WPARAM,lParam:LPARAM
 		;画笔或者橡皮
 		mov MouseStatus, 1
 	.ENDIF
+	pop ecx
 	ret
 IHandleButtonDown ENDP 
 
 ;处理鼠标收起来事件(擦除，写入，工具)
-IHandleButtonUp PROC hWnd:HWND,wParam:WPARAM,lParam:LPARAM
+IHandleButtonUp PROC USES ebx ecx,
+	hWnd:HWND,wParam:WPARAM,lParam:LPARAM
+	push ebx
+	push ecx
 	extern CurrentMode: DWORD
 	extern MouseStatus: DWORD
 	extern StartX: DWORD
@@ -139,6 +156,8 @@ IHandleButtonUp PROC hWnd:HWND,wParam:WPARAM,lParam:LPARAM
 		.IF CurrentPointNum >= 2
 			INVOKE InvalidateRect, hWnd, ADDR WorkRegion, 0
 		.ENDIF
+;这里添加不同的Mode的判断，从而调用Painter.asm中的函数
+	
 	.ELSE
 		;画线，矩形，椭圆，三角形等多种情况
 		mov ebx, lParam
@@ -148,12 +167,17 @@ IHandleButtonUp PROC hWnd:HWND,wParam:WPARAM,lParam:LPARAM
 			INVOKE InvalidateRect, hWnd, ADDR WorkRegion, 0
 		.ENDIF
 	.ENDIF
+	pop ecx
+	pop ebx
 	ret
 IHandleButtonUp ENDP
 
 ;处理光标事件
-IHandleCursor PROC hWnd:HWND,wParam:WPARAM,lParam:LPARAM
+IHandleCursor PROC USES eax ebx,
+	hWnd:HWND,wParam:WPARAM,lParam:LPARAM
 	extern hInstance:HINSTANCE
+	push eax
+	push ebx
 	mov eax,lParam
     and eax,0ffffh
     .IF eax!=HTCLIENT
@@ -170,11 +194,15 @@ IHandleCursor PROC hWnd:HWND,wParam:WPARAM,lParam:LPARAM
     .ENDIF
     invoke LoadCursor,hInstance,ebx
     invoke SetCursor,eax
+	pop ebx
+	pop eax
     ret
 IHandleCursor ENDP
 
 ;处理绘图事件
-IHandlePaint PROC hWnd:HWND,wParam:WPARAM,lParam:LPARAM,ps:PAINTSTRUCT		
+IHandlePaint PROC USES ecx,
+	hWnd:HWND,wParam:WPARAM,lParam:LPARAM,ps:PAINTSTRUCT		
+	push ecx
 	extern CurrentMode:DWORD
 	INVOKE BeginPaint, hWnd, ADDR ps
 	mov ecx, CurrentMode
@@ -206,6 +234,7 @@ IHandlePaint PROC hWnd:HWND,wParam:WPARAM,lParam:LPARAM,ps:PAINTSTRUCT
 		INVOKE IPaintPolygon, ps.hdc
 	.ENDIF
 	INVOKE EndPaint, hWnd, ADDR ps
+	pop ecx
 	ret
 IHandlePaint ENDP
 end

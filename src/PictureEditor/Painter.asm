@@ -546,5 +546,10 @@ IHandleTextDialog PROC hWnd:HWND,wParam:WPARAM,lParam:LPARAM
     .ENDIF
     ret
 IHandleTextDialog ENDP
+
+ISeletColor PROC hWnd:HWND, Command:DWORD
+
+ISeletColor ENDP
+
 end
 
