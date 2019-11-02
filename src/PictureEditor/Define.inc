@@ -95,6 +95,12 @@ IHandleFont					PROTO :HWND
 	IDM_ERASE				WORD 401
 	IDM_TEXT				WORD 402
 	IDM_LINE				WORD 403
+	IDM_SOLID_LINE			WORD 4031
+	IDM_DASH_LINE			WORD 4032
+	IDM_DOT_LINE			WORD 4033
+	IDM_DASHDOT_LINE		WORD 4034
+	IDM_DASHDOT2_LINE		WORD 4035
+	IDM_INSIDEFRAME_LINE	WORD 4036
 	IDM_TRIANGLE0			WORD 4040
 	IDM_TRIANGLE1			WORD 4041
 	IDM_RECTANGLE			WORD 405
@@ -108,9 +114,18 @@ IHandleFont					PROTO :HWND
 	IDM_SAVE				WORD 411
 	IDM_LOAD				WORD 412
 	;Color
-	IDM_BACKGROUND_COLOR	WORD 413
-	IDM_FRAME_COLOR			WORD 414
+	IDM_BRUSH_COLOR	WORD 413
+	IDM_PEN_COLOR			WORD 414
 	IDM_FONT				WORD 415
+
+	IDM_BRUSH 				WORD 416
+	IDM_SOLID_BRUSH			WORD 4160
+	IDM_BDIAG_BRUSH			WORD 4161
+	IDM_FDIAG_BRUSH			WORD 4162
+	IDM_DCROSS_BRUSH		WORD 4163
+	IDM_CROSS_BRUSH 		WORD 4164
+	IDM_HORIZ_BRUSH			WORD 4165
+	IDM_VERTI_BRUSH			WORD 4166
 
 	;当前模式的编号
 	IDM_MODE_DRAW				DWORD 500
@@ -137,44 +152,62 @@ IHandleFont					PROTO :HWND
 
 	; 菜单字符串
 	FileMenuString			BYTE "文件", 0
-	LoadMenuString			BYTE "打开", 0
-	SaveMenuString			BYTE "保存", 0
+		LoadMenuString			BYTE "打开", 0
+		SaveMenuString			BYTE "保存", 0
 
 	DrawMenuString			BYTE "绘图", 0
-	PaintMenuString			BYTE "画图", 0
-	EraseMenuString			BYTE "擦除", 0
-	TextMenuString			BYTE "文字", 0
+		PaintMenuString			BYTE "画图", 0
+		EraseMenuString			BYTE "擦除", 0
+		TextMenuString			BYTE "文字", 0
 
 	FrameMenuString			BYTE "框架绘制工具", 0
-	LineMenuString			BYTE "直线", 0
-	RectangleFrameMenuString BYTE "矩形框", 0
-	Triangle0FrameMenuString BYTE "直角三角形框（上方）", 0
-	Triangle1FrameMenuString BYTE "直角三角形框（下方）", 0
-	PolygonFrameMenuString	BYTE "多边形框", 0
+		LineMenuString			BYTE "直线", 0
+		RectangleFrameMenuString BYTE "矩形框", 0
+		Triangle0FrameMenuString BYTE "直角三角形框（上方）", 0
+		Triangle1FrameMenuString BYTE "直角三角形框（下方）", 0
+		PolygonFrameMenuString	BYTE "多边形框", 0
+		BrushMenuString			BYTE "填充方式", 0
+
+			SolidLineMenuString		BYTE "实线", 0
+			DashLineMenuString		BYTE "段线", 0
+			DotLineMenuString		BYTE "点线", 0
+			DashDotLineMenuString	BYTE "线、点",0
+			DashDot2LineMenuString	BYTE "线、点、点", 0
+			InsideFrameLineMenuString BYTE "内线宽", 0
+			SolidBrushMenuString	BYTE "实心", 0
+			BDiagonalBrushMenuString  BYTE "右斜线", 0
+			FDiagonalBrushMenuString  BYTE "左斜线", 0
+			DiagCrossBrushMenuString  BYTE "斜交叉", 0
+			CrossBrushMenuString	BYTE "交叉", 0
+			HorizontalBrushMenuString BYTE "平行", 0
+			VerticalBrushMenuString	  BYTE "竖直", 0
+
 
 	ColorMenuString			BYTE "颜色", 0
-	ColorBackgroundMenuString BYTE "填充", 0
-	ColorFrameMenuString	BYTE "线条", 0
+		ColorBrushMenuString	BYTE "填充", 0
+		ColorPenMenuString		BYTE "线条", 0
+		
 	
 	FontMenuString			BYTE "字体", 0
-	FontChooseMenuString	BYTE "选择字体", 0 
+		FontChooseMenuString	BYTE "选择字体", 0 
 
 	ToolMenuString			BYTE "图形绘制工具", 0
-	RectangleMenuString		BYTE "矩形", 0
-	Triangle0MenuString		BYTE "直角三角形（上方）", 0
-	Triangle1MenuString		BYTE "直角三角形（下方）", 0
-	EllipseMenuString		BYTE "椭圆", 0
-	PolygonMenuString		BYTE "多边形", 0
+		RectangleMenuString		BYTE "矩形", 0
+		Triangle0MenuString		BYTE "直角三角形（上方）", 0
+		Triangle1MenuString		BYTE "直角三角形（下方）", 0
+		EllipseMenuString		BYTE "椭圆", 0
+		PolygonMenuString		BYTE "多边形", 0
 
-	SettingsMenuString		BYTE "设置", 0
-
-	editText       byte  100 DUP(0)
-	buffer         HDC   NULL
+	SettingsMenuString		BYTE "帮助", 0
 
 	PenColor 				DWORD 0ffh
 	PenStyle				DWORD PS_SOLID ;PS_SOLID == 0
 	PenWidth				DWORD 1		   ;If PenStyle != PS_SOLID, PenWidth <= 1
 	BrushColor 				DWORD 0ffffffh ;Fill Rect with BrushColor
+	BrushMode				DWORD 0
+		SOLID_BRUSH 		DWORD 0
+		HATCH_BRUSH			DWORD 1
+		HatchStyle			DWORD HS_BDIAGONAL
 	ArrayCustom_Color		DWORD 16 DUP(0)
 	
 	LogicFont				LOGFONT <> 

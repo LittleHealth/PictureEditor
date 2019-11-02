@@ -24,8 +24,27 @@ IHandleModeChange PROC USES ebx ecx,
 		mov ecx, IDM_MODE_ERASE
 	.ELSEIF bx == IDM_TEXT ;文字
 		mov ecx, IDM_MODE_TEXT
-	.ELSEIF bx == IDM_LINE ;画线
-		mov ecx, IDM_MODE_LINE
+	.ELSEIF bx == IDM_SOLID_LINE || bx == IDM_DASH_LINE || bx == IDM_DOT_LINE || bx == IDM_DASHDOT_LINE || bx == IDM_DASHDOT2_LINE || bx == IDM_INSIDEFRAME_LINE;画线
+		.IF bx == IDM_SOLID_LINE
+			mov ecx, IDM_MODE_LINE
+			push PS_SOLID
+		.ELSEIF bx == IDM_DASH_LINE ;画线
+			mov ecx, IDM_MODE_LINE
+			push PS_DASH
+		.ELSEIF bx == IDM_DOT_LINE ;画线
+			mov ecx, IDM_MODE_LINE
+			push PS_DOT
+		.ELSEIF bx == IDM_DASHDOT_LINE ;画线
+			mov ecx, IDM_MODE_LINE
+			push PS_DASHDOT
+		.ELSEIF bx == IDM_DASHDOT2_LINE ;画线
+			mov ecx, IDM_MODE_LINE
+			push PS_DASHDOTDOT
+		.ELSEIF bx == IDM_INSIDEFRAME_LINE ;画线
+			mov ecx, IDM_MODE_LINE
+			push PS_INSIDEFRAME
+		.ENDIF
+		pop PenStyle
 	.ELSEIF bx == IDM_TRIANGLE0_FRAME ;上三角形边框
 		mov ecx, IDM_MODE_TRIANGLE0_FRAME
 	.ELSEIF bx == IDM_TRIANGLE1_FRAME ;下三角形边框
@@ -44,12 +63,32 @@ IHandleModeChange PROC USES ebx ecx,
 		mov ecx, IDM_MODE_ELLIPSE
 	.ELSEIF bx == IDM_POLYGON ;多边形
 		mov ecx, IDM_MODE_POLYGON
-	.ELSEIF bx == IDM_BACKGROUND_COLOR
+	.ELSEIF bx == IDM_BRUSH_COLOR
 		INVOKE IHandleColor, hWnd, 0
-	.ELSEIF bx == IDM_FRAME_COLOR
+	.ELSEIF bx == IDM_PEN_COLOR
 		INVOKE IHandleColor, hWnd, 1
 	.ELSEIF bx == IDM_FONT
 		INVOKE IHandleFont, hWnd
+	.ELSEIF bx == IDM_SOLID_BRUSH
+		push SOLID_BRUSH
+		pop BrushMode
+	.ELSEIF bx == IDM_BDIAG_BRUSH || bx == IDM_FDIAG_BRUSH || bx == IDM_DCROSS_BRUSH || bx == IDM_CROSS_BRUSH || bx == IDM_HORIZ_BRUSH || bx == IDM_VERTI_BRUSH
+		push HATCH_BRUSH
+		pop BrushMode
+		.IF bx == IDM_BDIAG_BRUSH
+			push HS_BDIAGONAL
+		.ELSEIF bx == IDM_FDIAG_BRUSH
+			push HS_FDIAGONAL
+		.ELSEIF bx == IDM_DCROSS_BRUSH
+			push HS_DIAGCROSS
+		.ELSEIF bx == IDM_CROSS_BRUSH
+			push HS_CROSS
+		.ELSEIF bx == IDM_HORIZ_BRUSH
+			push HS_HORIZONTAL
+		.ELSEIF bx == IDM_VERTI_BRUSH
+			push HS_VERTICAL
+		.ENDIF
+		pop HatchStyle
 	.ENDIF
 	mov CurrentMode, ecx
 	pop ecx
@@ -216,14 +255,6 @@ IHandlePaint PROC USES ecx,
 	local hBrush: HBRUSH
 	extern CurrentMode:DWORD
 	push ecx
-	;local hPen: HPEN
-	;INVOKE CreatePen, PenStyle PenWidth, PenColor
-	;mov hPen, eax
-	;INVOKE SelectObject, ps.hdc, hPen
-
-	;INVOKE CreateSolidBrush, BrushColor
-	
-	;INVOKE CreateSolidBru
 	INVOKE BeginPaint, hWnd, ADDR ps
 	mov ecx, CurrentMode
 	.IF ecx == IDM_MODE_DRAW || ecx==IDM_MODE_LINE || ecx==IDM_MODE_RECTANGLE_FRAME || ecx==IDM_MODE_POLYGON_FRAME || ecx==IDM_MODE_TRIANGLE0_FRAME || ecx==IDM_MODE_TRIANGLE1_FRAME
@@ -248,7 +279,13 @@ IHandlePaint PROC USES ecx,
 		INVOKE DeleteObject, hPen
 	.ELSEIF ecx == IDM_MODE_RECTANGLE || ecx==IDM_MODE_POLYGON || ecx==IDM_MODE_TRIANGLE0 || ecx==IDM_MODE_TRIANGLE1 || ecx==IDM_MODE_ELLIPSE
 		push ecx
-		INVOKE CreateSolidBrush, BrushColor
+		mov ecx, BrushMode
+		.IF ecx == SOLID_BRUSH
+			INVOKE CreateSolidBrush, BrushColor
+		;.ELSE
+		.ELSEIF ecx == HATCH_BRUSH
+			INVOKE CreateHatchBrush, HatchStyle, BrushColor
+		.ENDIF
 		mov hBrush, eax
 		INVOKE SelectObject, ps.hdc, hBrush
 		INVOKE CreatePen, PenStyle, PenWidth, PenColor
