@@ -23,6 +23,7 @@ ICreateMenu PROC
 	LOCAL FrameMenu: HMENU
 	LOCAL ToolMenu: HMENU
 	LOCAL ColorMenu: HMENU
+	LOCAL FontMenu: HMENU
 	LOCAL SettingsMenu: HMENU
 
 	INVOKE CreateMenu
@@ -41,6 +42,8 @@ ICreateMenu PROC
 	mov ToolMenu, eax
 	INVOKE CreatePopupMenu
 	mov ColorMenu, eax
+	INVOKE CreatePopupMenu
+	mov FontMenu, eax
 	INVOKE CreatePopupMenu
 	mov SettingsMenu, eax
 
@@ -73,7 +76,10 @@ ICreateMenu PROC
 	INVOKE AppendMenu, ColorMenu, MF_STRING, IDM_BACKGROUND_COLOR, ADDR ColorBackgroundMenuString
 	INVOKE AppendMenu, ColorMenu, MF_STRING, IDM_FRAME_COLOR, ADDR ColorFrameMenuString
 	
+	INVOKE AppendMenu, hMenu, MF_POPUP, FontMenu, ADDR FontMenuString
+	INVOKE AppendMenu, FontMenu, MF_STRING, IDM_FONT, ADDR FontChooseMenuString
+
 	INVOKE AppendMenu, hMenu, MF_POPUP, SettingsMenu, ADDR SettingsMenuString
-	ret
+	ret  
 ICreateMenu ENDP
 end

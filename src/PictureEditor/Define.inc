@@ -63,6 +63,7 @@ IHandleTextDialog			PROTO :HWND,:WPARAM,:LPARAM ;将对话框输入文字存储，用于绘制
 ICreateMenu					PROTO ;建立菜单
 
 IHandleColor				PROTO :HWND, :DWORD
+IHandleFont					PROTO :HWND
 
 ;定义各种常量
 .data
@@ -74,10 +75,6 @@ IHandleColor				PROTO :HWND, :DWORD
 
 	;字符上限
 	MAX_LENGTH				WORD 100
-
-	Background_Color 		DWORD 0ffffffh
-	Frame_Color 			DWORD 0
-	ArrayCustom_Color		DWORD 16 DUP(0)
 
 	;资源文件
 	IDD_DIALOG1				WORD 104
@@ -113,6 +110,7 @@ IHandleColor				PROTO :HWND, :DWORD
 	;Color
 	IDM_BACKGROUND_COLOR	WORD 413
 	IDM_FRAME_COLOR			WORD 414
+	IDM_FONT				WORD 415
 
 	;当前模式的编号
 	IDM_MODE_DRAW				DWORD 500
@@ -130,6 +128,7 @@ IHandleColor				PROTO :HWND, :DWORD
 	IDM_MODE_POLYGON_FRAME		DWORD 510
 	IDM_MODE_BACKGROUBD_COLOR	DWORD 511
 	IDM_MODE_FRAME_COLOR		DWORD 512
+	IDM_MODE_FONT				DWORD 513
 
 
 	; 类名以及程序名字符串
@@ -154,8 +153,11 @@ IHandleColor				PROTO :HWND, :DWORD
 	PolygonFrameMenuString	BYTE "多边形框", 0
 
 	ColorMenuString			BYTE "颜色", 0
-	ColorBackgroundMenuString BYTE "背景", 0
+	ColorBackgroundMenuString BYTE "填充", 0
 	ColorFrameMenuString	BYTE "线条", 0
+	
+	FontMenuString			BYTE "字体", 0
+	FontChooseMenuString	BYTE "选择字体", 0 
 
 	ToolMenuString			BYTE "图形绘制工具", 0
 	RectangleMenuString		BYTE "矩形", 0
@@ -166,6 +168,17 @@ IHandleColor				PROTO :HWND, :DWORD
 
 	SettingsMenuString		BYTE "设置", 0
 
+	editText       byte  100 DUP(0)
+	buffer         HDC   NULL
+
+	PenColor 				DWORD 0ffh
+	PenStyle				DWORD PS_SOLID ;PS_SOLID == 0
+	PenWidth				DWORD 1		   ;If PenStyle != PS_SOLID, PenWidth <= 1
+	BrushColor 				DWORD 0ffffffh ;Fill Rect with BrushColor
+	ArrayCustom_Color		DWORD 16 DUP(0)
+	
+	LogicFont				LOGFONT <> 
+    CurrentFont				HFONT	0
 
 
 

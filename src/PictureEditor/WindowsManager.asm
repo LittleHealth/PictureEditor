@@ -45,11 +45,11 @@ IHandleModeChange PROC USES ebx ecx,
 	.ELSEIF bx == IDM_POLYGON ;多边形
 		mov ecx, IDM_MODE_POLYGON
 	.ELSEIF bx == IDM_BACKGROUND_COLOR
-		mov ecx, IDM_MODE_BACKGROUBD_COLOR
 		INVOKE IHandleColor, hWnd, 0
 	.ELSEIF bx == IDM_FRAME_COLOR
-		mov ecx, IDM_MODE_FRAME_COLOR
 		INVOKE IHandleColor, hWnd, 1
+	.ELSEIF bx == IDM_FONT
+		INVOKE IHandleFont, hWnd
 	.ENDIF
 	mov CurrentMode, ecx
 	pop ecx
@@ -79,8 +79,8 @@ IHandleMouseMove PROC USES ebx ecx edx,
 	mov edx, CurrentX
 	mov ebx, CurrentY
 	mov ecx, CurrentMode
-	.IF ecx == IDM_MODE_DRAW    ;画线
-		.IF MouseStatus == 1
+	.IF MouseStatus == 1
+		.IF ecx == IDM_MODE_DRAW    ;画线
 			;更新画线位置 
 			.IF EndX == 0  ;第一次画线
 				mov StartX, edx
@@ -98,10 +98,8 @@ IHandleMouseMove PROC USES ebx ecx edx,
 
 			mov EndX, edx
 			mov EndY, ebx
-			INVOKE InvalidateRect, hWnd, ADDR WorkRegion, 0
-		.ENDIF
-	.ELSEIF ecx == IDM_MODE_ERASE ;擦除
-		.IF MouseStatus == 1
+			INVOKE InvalidateRect, hWnd, ADDR WorkRegion,0
+		.ELSEIF ecx == IDM_MODE_ERASE ;擦除
 			INVOKE InvalidateRect, hWnd, ADDR WorkRegion, 0
 		.ENDIF
 	.ENDIF
@@ -126,9 +124,14 @@ IHandleButtonDown PROC USES ecx,
 	ret
 IHandleButtonDown ENDP 
 
+
 ;处理鼠标收起来事件(擦除，写入，工具)
 IHandleButtonUp PROC USES ebx ecx,
 	hWnd:HWND,wParam:WPARAM,lParam:LPARAM
+    local hdc:HDC
+    local tempDC:HDC
+    local tempBitmap:HBITMAP
+	extern hInstance:HINSTANCE
 	push ebx
 	push ecx
 	extern CurrentMode: DWORD
@@ -138,7 +141,7 @@ IHandleButtonUp PROC USES ebx ecx,
 	extern EndX: DWORD
 	extern EndY: DWORD
 	extern CurrentPointNum: DWORD
-	mov ecx, CurrentMode
+ 	mov ecx, CurrentMode
 	.IF ecx == IDM_MODE_DRAW || ecx == IDM_MODE_ERASE
 		;画笔或者橡皮
 		mov MouseStatus, 0
@@ -151,6 +154,7 @@ IHandleButtonUp PROC USES ebx ecx,
 		mov ebx, lParam
 		INVOKE IGetCurrentPoint, ebx
 		INVOKE InvalidateRect, hWnd, ADDR WorkRegion, 0
+
 	.ELSEIF ecx == IDM_MODE_POLYGON || ecx == IDM_MODE_POLYGON_FRAME
 		;多边形或者边框
 		mov ebx, lParam
@@ -208,36 +212,69 @@ IHandleCursor ENDP
 ;处理绘图事件
 IHandlePaint PROC USES ecx,
 	hWnd:HWND,wParam:WPARAM,lParam:LPARAM,ps:PAINTSTRUCT		
-	push ecx
+	local hPen: HPEN
+	local hBrush: HBRUSH
 	extern CurrentMode:DWORD
+	push ecx
+	;local hPen: HPEN
+	;INVOKE CreatePen, PenStyle PenWidth, PenColor
+	;mov hPen, eax
+	;INVOKE SelectObject, ps.hdc, hPen
+
+	;INVOKE CreateSolidBrush, BrushColor
+	
+	;INVOKE CreateSolidBru
 	INVOKE BeginPaint, hWnd, ADDR ps
 	mov ecx, CurrentMode
-	.IF ecx == IDM_MODE_DRAW
-		INVOKE IPaint, ps.hdc
+	.IF ecx == IDM_MODE_DRAW || ecx==IDM_MODE_LINE || ecx==IDM_MODE_RECTANGLE_FRAME || ecx==IDM_MODE_POLYGON_FRAME || ecx==IDM_MODE_TRIANGLE0_FRAME || ecx==IDM_MODE_TRIANGLE1_FRAME
+		push ecx
+		INVOKE CreatePen, PenStyle, PenWidth, PenColor
+		mov hPen, eax
+		INVOKE SelectObject, ps.hdc, hPen
+		pop ecx
+		.IF ecx == IDM_MODE_DRAW
+			INVOKE IPaint, ps.hdc
+		.ELSEIF ecx == IDM_MODE_LINE
+			INVOKE IPaintLine, ps.hdc
+		.ELSEIF ecx == IDM_MODE_RECTANGLE_FRAME
+			INVOKE IPaintRectangleFrame, ps.hdc
+		.ELSEIF ecx == IDM_MODE_TRIANGLE0_FRAME
+			INVOKE IPaintTriangle0Frame, ps.hdc
+		.ELSEIF ecx == IDM_MODE_TRIANGLE1_FRAME
+			INVOKE IPaintTriangle1Frame, ps.hdc
+		.ELSEIF ecx == IDM_MODE_POLYGON_FRAME
+			INVOKE IPaintPolygonFrame, ps.hdc
+		.ENDIF
+		INVOKE DeleteObject, hPen
+	.ELSEIF ecx == IDM_MODE_RECTANGLE || ecx==IDM_MODE_POLYGON || ecx==IDM_MODE_TRIANGLE0 || ecx==IDM_MODE_TRIANGLE1 || ecx==IDM_MODE_ELLIPSE
+		push ecx
+		INVOKE CreateSolidBrush, BrushColor
+		mov hBrush, eax
+		INVOKE SelectObject, ps.hdc, hBrush
+		INVOKE CreatePen, PenStyle, PenWidth, PenColor
+		mov hPen, eax
+		INVOKE SelectObject, ps.hdc, hPen
+		pop ecx
+		.IF ecx == IDM_MODE_RECTANGLE
+			INVOKE IPaintRectangle, ps.hdc
+		.ELSEIF ecx == IDM_MODE_TRIANGLE0
+			INVOKE IPaintTriangle0, ps.hdc
+		.ELSEIF ecx == IDM_MODE_TRIANGLE1
+			INVOKE IPaintTriangle1, ps.hdc
+		.ELSEIF ecx == IDM_MODE_ELLIPSE
+			INVOKE IPaintEllipse, ps.hdc
+		.ELSEIF ecx == IDM_MODE_POLYGON
+			INVOKE IPaintPolygon, ps.hdc
+		.ENDIF
+		INVOKE DeleteObject, hBrush
+		INVOKE DeleteObject, hPen
 	.ELSEIF ecx == IDM_MODE_ERASE
 		INVOKE IErase, ps.hdc
 	.ELSEIF ecx == IDM_MODE_TEXT
+		push ecx		
+		INVOKE SelectObject,ps.hdc, CurrentFont
+		pop ecx
 		INVOKE IText, ps.hdc, hWnd
-	.ELSEIF ecx == IDM_MODE_LINE
-		INVOKE IPaintLine, ps.hdc
-	.ELSEIF ecx == IDM_MODE_RECTANGLE_FRAME
-		INVOKE IPaintRectangleFrame, ps.hdc
-	.ELSEIF ecx == IDM_MODE_TRIANGLE0_FRAME
-		INVOKE IPaintTriangle0Frame, ps.hdc
-	.ELSEIF ecx == IDM_MODE_TRIANGLE1_FRAME
-		INVOKE IPaintTriangle1Frame, ps.hdc
-	.ELSEIF ecx == IDM_MODE_POLYGON_FRAME
-		INVOKE IPaintPolygonFrame, ps.hdc
-	.ELSEIF ecx == IDM_MODE_RECTANGLE
-		INVOKE IPaintRectangle, ps.hdc
-	.ELSEIF ecx == IDM_MODE_TRIANGLE0
-		INVOKE IPaintTriangle0, ps.hdc
-	.ELSEIF ecx == IDM_MODE_TRIANGLE1
-		INVOKE IPaintTriangle1, ps.hdc
-	.ELSEIF ecx == IDM_MODE_ELLIPSE
-		INVOKE IPaintEllipse, ps.hdc
-	.ELSEIF ecx == IDM_MODE_POLYGON
-		INVOKE IPaintPolygon, ps.hdc
 	.ENDIF
 	INVOKE EndPaint, hWnd, ADDR ps
 	pop ecx
@@ -247,7 +284,8 @@ IHandlePaint ENDP
 IHandleColor PROC hWnd:HWND, Command:DWORD
 	local cc:CHOOSECOLOR
 	extern hInstance:HINSTANCE
-
+	push eax
+	push ecx
     mov cc.lStructSize,sizeof cc
     mov eax,hWnd
     mov cc.hwndOwner,eax
@@ -262,13 +300,43 @@ IHandleColor PROC hWnd:HWND, Command:DWORD
     mov cc.lpTemplateName,0
     INVOKE ChooseColor,addr cc
     mov eax,cc.rgbResult
-	mov ecx, Command
-    .IF ecx == Command
-        mov Background_Color, eax
-    .ELSEIF ecx == Command
-        mov Frame_Color, eax
+    .IF Command == 0
+        mov BrushColor, eax
+    .ELSEIF Command == 1
+        mov PenColor, eax
     .ENDIF
+	pop ecx
+	pop eax
     ret
 IHandleColor ENDP
+
+
+IHandleFont PROC hWnd:HWND
+    local cc:CHOOSEFONT
+    extern hInstance:HINSTANCE
+
+    mov cc.lStructSize,sizeof cc
+    mov eax,hWnd
+    mov cc.hwndOwner,eax
+    mov cc.hDC, 0
+    push offset LogicFont
+    pop cc.lpLogFont
+    mov cc.Flags, 0
+    mov cc.rgbColors, 0
+    mov cc.lCustData, 0
+    mov cc.lpfnHook, 0
+    mov cc.lpTemplateName, 0
+    mov eax,hInstance
+    mov cc.hInstance,eax
+    mov cc.lpszStyle, 0
+    mov cc.nFontType, 0
+    mov cc.nSizeMin, 0
+    mov cc.nSizeMax, 0
+    
+    invoke ChooseFont,addr cc
+    invoke CreateFontIndirect, offset LogicFont
+    mov CurrentFont, eax
+    ret
+IHandleFont endp
 
 end

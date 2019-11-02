@@ -1,5 +1,5 @@
-;ÎÄ¼şÃû£ºPainter.asm
-;ÃèÊö£º¸÷ÖÖ»æÍ¼º¯ÊıµÄ¶¨Òå
+;æ–‡ä»¶åï¼šPainter.asm
+;æè¿°ï¼šå„ç§ç»˜å›¾å‡½æ•°çš„å®šä¹‰
 
 .386 
 .model flat,stdcall 
@@ -24,40 +24,40 @@ public CurrentPointList
 public SameThreshold
 
 .data
-; Ä£Ê½
+; æ¨¡å¼
 CurrentMode DWORD IDM_MODE_DRAW
 
-;»­ÏßºÍ²Á³ı
-;×ø±ê
+;ç”»çº¿å’Œæ“¦é™¤
+;åæ ‡
 CurrentX DWORD 0
 CurrentY DWORD 0
 StartX DWORD 0
 StartY DWORD 0
 EndX DWORD 0
 EndY DWORD 0
-;Êó±ê×´Ì¬
+;é¼ æ ‡çŠ¶æ€
 MouseStatus DWORD 0
 
-;»­¶à±ßĞÎµÈ
-;»­¶à±ßĞÎÊÇ·ñÒÑ¾­½áÊø
+;ç”»å¤šè¾¹å½¢ç­‰
+;ç”»å¤šè¾¹å½¢æ˜¯å¦å·²ç»ç»“æŸ
 WhetherDrawPolygon DWORD 0
 
-;µ±Ç°Ê¹ÓÃµÄµãĞÅÏ¢
+;å½“å‰ä½¿ç”¨çš„ç‚¹ä¿¡æ¯
 CurrentPointNum DWORD 0
 CurrentPointListX DWORD 100 DUP(?)
 CurrentPointListY DWORD 100 DUP(?)
 
-;Êµ¼Ê»­¶à±ßĞÎµÄ²ÎÊı
+;å®é™…ç”»å¤šè¾¹å½¢çš„å‚æ•°
 CurrentPointList DWORD 200 DUP(?)
-;ÅĞ¶ÏÁ½µãÊÇ·ñ½Ó½üµÄThreshold
+;åˆ¤æ–­ä¸¤ç‚¹æ˜¯å¦æ¥è¿‘çš„Threshold
 SameThreshold DWORD 2
 
-;ÏÔÊ¾µÄÎÄ×Ö
+;æ˜¾ç¤ºçš„æ–‡å­—
 ShowString BYTE 100 dup(?)
 
 
 .code
-;»­±Ê»æÖÆº¯Êı
+;ç”»ç¬”ç»˜åˆ¶å‡½æ•°
 IPaint PROC, hdc:HDC
 	INVOKE MoveToEx, hdc, StartX, StartY, NULL
 	INVOKE LineTo, hdc, EndX, EndY
@@ -65,7 +65,7 @@ IPaint PROC, hdc:HDC
 	ret
 IPaint ENDP
 
-;ÏğÆ¤²Á³ıº¯Êı
+;æ©¡çš®æ“¦é™¤å‡½æ•°
 IErase PROC, hdc:HDC
 	extern EraserRadius:DWORD
 	INVOKE GetStockObject, NULL_PEN
@@ -85,7 +85,7 @@ IErase PROC, hdc:HDC
 	ret
 IErase ENDP
 
-;ÎÄ×ÖÊäÈëº¯Êı
+;æ–‡å­—è¾“å…¥å‡½æ•°
 IText PROC, hdc:HDC,hWnd:HWND
 	extern hInstance:HINSTANCE
 	mov edx, CurrentX
@@ -100,7 +100,7 @@ IText PROC, hdc:HDC,hWnd:HWND
 	ret
 IText ENDP
 
-;»­Ïßº¯Êı
+;ç”»çº¿å‡½æ•°
 IPaintLine PROC, hdc:HDC
 	mov edx, DWORD PTR [CurrentPointListX]
 	mov ecx, DWORD PTR [CurrentPointListY]
@@ -113,7 +113,7 @@ IPaintLine PROC, hdc:HDC
 	ret
 IPaintLine ENDP
 
-;»­¾ØĞÎ¿òº¯Êı
+;ç”»çŸ©å½¢æ¡†å‡½æ•°
 IPaintRectangleFrame PROC hdc:HDC
 	mov edx, DWORD PTR [CurrentPointListX]
 	mov ecx, DWORD PTR [CurrentPointListY]
@@ -144,7 +144,7 @@ IPaintRectangleFrame PROC hdc:HDC
 	ret
 IPaintRectangleFrame ENDP
 
-;»­Ö±½ÇÈı½ÇĞÎ(ÉÏ·½)¿òº¯Êı
+;ç”»ç›´è§’ä¸‰è§’å½¢(ä¸Šæ–¹)æ¡†å‡½æ•°
 IPaintTriangle0Frame PROC hdc:HDC
 	LOCAL MiddleX:DWORD, MiddleY:DWORD
 	mov edx, DWORD PTR [CurrentPointListX]
@@ -179,7 +179,7 @@ IPaintTriangle0Frame PROC hdc:HDC
 	ret
 IPaintTriangle0Frame ENDP
 
-;»­Ö±½ÇÈı½ÇĞÎ(ÏÂ·½)¿òº¯Êı
+;ç”»ç›´è§’ä¸‰è§’å½¢(ä¸‹æ–¹)æ¡†å‡½æ•°
 IPaintTriangle1Frame PROC hdc:HDC
 LOCAL MiddleX:DWORD, MiddleY:DWORD
 	mov edx, DWORD PTR [CurrentPointListX]
@@ -214,7 +214,7 @@ LOCAL MiddleX:DWORD, MiddleY:DWORD
 	ret
 IPaintTriangle1Frame ENDP
 
-;»­¶à±ßĞÎ¿òº¯Êı
+;ç”»å¤šè¾¹å½¢æ¡†å‡½æ•°
 IPaintPolygonFrame PROC, hdc:HDC
 	.IF WhetherDrawPolygon == 0
 		INVOKE IIncreasePolygonLine, hdc
@@ -225,7 +225,7 @@ IPaintPolygonFrame PROC, hdc:HDC
 	ret
 IPaintPolygonFrame ENDP
 
-;»­¾ØĞÎº¯Êı
+;ç”»çŸ©å½¢å‡½æ•°
 IPaintRectangle PROC, hdc:HDC
 	mov edx, DWORD PTR [CurrentPointListX]
 	mov ecx, DWORD PTR [CurrentPointListY]
@@ -236,7 +236,7 @@ IPaintRectangle PROC, hdc:HDC
 	ret
 IPaintRectangle ENDP
 
-;»­Ö±½ÇÈı½ÇĞÎ(ÉÏ·½)º¯Êı
+;ç”»ç›´è§’ä¸‰è§’å½¢(ä¸Šæ–¹)å‡½æ•°
 IPaintTriangle0 PROC hdc:HDC
 	LOCAL MiddleX:DWORD, MiddleY:DWORD
 	mov edx, DWORD PTR [CurrentPointListX]
@@ -269,7 +269,7 @@ IPaintTriangle0 PROC hdc:HDC
 	ret
 IPaintTriangle0 ENDP
 
-;»­Ö±½ÇÈı½ÇĞÎ(ÏÂ·½)º¯Êı
+;ç”»ç›´è§’ä¸‰è§’å½¢(ä¸‹æ–¹)å‡½æ•°
 IPaintTriangle1 PROC hdc:HDC
 	LOCAL MiddleX:DWORD, MiddleY:DWORD
 	mov edx, DWORD PTR [CurrentPointListX]
@@ -302,7 +302,7 @@ IPaintTriangle1 PROC hdc:HDC
 	ret
 IPaintTriangle1 ENDP
 
-;»­ÍÖÔ²º¯Êı
+;ç”»æ¤­åœ†å‡½æ•°
 IPaintEllipse PROC, hdc:HDC
 	mov edx, DWORD PTR [CurrentPointListX]
 	mov ecx, DWORD PTR [CurrentPointListY]
@@ -313,7 +313,7 @@ IPaintEllipse PROC, hdc:HDC
 	ret
 IPaintEllipse ENDP
 
-;»­¶à±ßĞÎº¯Êı
+;ç”»å¤šè¾¹å½¢å‡½æ•°
 IPaintPolygon PROC, hdc:HDC
 	.IF WhetherDrawPolygon == 0
 		INVOKE IIncreasePolygonLine, hdc
@@ -326,7 +326,7 @@ IPaintPolygon PROC, hdc:HDC
 	ret
 IPaintPolygon ENDP
 
-;ÔÚ¶à±ßĞÎ»æÖÆÊ±Ôö¼ÓÒ»ÌõÏß
+;åœ¨å¤šè¾¹å½¢ç»˜åˆ¶æ—¶å¢åŠ ä¸€æ¡çº¿
 IIncreasePolygonLine PROC, hdc:HDC
 	push esi
 	mov esi, OFFSET CurrentPointListX
@@ -353,7 +353,7 @@ IIncreasePolygonLine PROC, hdc:HDC
 	ret
 IIncreasePolygonLine ENDP
 
-;ÔÚ¶à±ßĞÎ»æÖÆÊ±Ôö¼Ó×îºóÒ»ÌõÏß£¬Á¬½Ó¿ªÊ¼ºÍ½áÊø
+;åœ¨å¤šè¾¹å½¢ç»˜åˆ¶æ—¶å¢åŠ æœ€åä¸€æ¡çº¿ï¼Œè¿æ¥å¼€å§‹å’Œç»“æŸ
 IIncreasePolygonLastLine PROC, hdc:HDC
 	push esi
 	mov esi, OFFSET CurrentPointListX
@@ -380,7 +380,7 @@ IIncreasePolygonLastLine PROC, hdc:HDC
 	ret
 IIncreasePolygonLastLine ENDP 
 
-;»ñµÃµ±Ç°µãĞÅÏ¢
+;è·å¾—å½“å‰ç‚¹ä¿¡æ¯
 IGetCurrentPoint PROC, Place:DWORD
 	push ebx
 	push edx
@@ -395,8 +395,8 @@ IGetCurrentPoint PROC, Place:DWORD
 	ret
 IGetCurrentPoint ENDP
 
-;ÅĞ¶Ï¶à±ßĞÎÊÇ·ñ»æÖÆÍê±Ï--ÒÑ¾­ÓĞÈı¸öµãÒÔÉÏ£¬×îºóÒ»¸öµãºÍµÚÒ»¸öµã½Ó½üÖØºÏ.
-;½Ó½ü£ºeax = 1 ·ñÔòeax = 0
+;åˆ¤æ–­å¤šè¾¹å½¢æ˜¯å¦ç»˜åˆ¶å®Œæ¯•--å·²ç»æœ‰ä¸‰ä¸ªç‚¹ä»¥ä¸Šï¼Œæœ€åä¸€ä¸ªç‚¹å’Œç¬¬ä¸€ä¸ªç‚¹æ¥è¿‘é‡åˆ.
+;æ¥è¿‘ï¼šeax = 1 å¦åˆ™eax = 0
 IJudgePolygonEnd PROC
 	push edx
 	push ebx
@@ -442,7 +442,7 @@ EndJudge:
 	ret
 IJudgePolygonEnd ENDP
 
-;½«µ±Ç°µã´æ´¢½øµãÁĞ
+;å°†å½“å‰ç‚¹å­˜å‚¨è¿›ç‚¹åˆ—
 IAddGraphPoint PROC
 	LOCAL PointerX:DWORD
 	LOCAL PointerY:DWORD
@@ -472,8 +472,8 @@ IAddGraphPoint PROC
 	ret
 IAddGraphPoint ENDP
 
-;¸ù¾İµãÁĞµÃµ½»æÖÆ¶à±ßĞÎµÄ´æ´¢µãÁĞ
-;½«x£¬yÁ½¸öÊı×é×ª»¯ÎªÁ¬Ğøx£¬yµÄÊı×é
+;æ ¹æ®ç‚¹åˆ—å¾—åˆ°ç»˜åˆ¶å¤šè¾¹å½¢çš„å­˜å‚¨ç‚¹åˆ—
+;å°†xï¼Œyä¸¤ä¸ªæ•°ç»„è½¬åŒ–ä¸ºè¿ç»­xï¼Œyçš„æ•°ç»„
 IGetPolygonPointList PROC
 	push esi
 	push edx
@@ -519,13 +519,13 @@ IGetPolygonPointList PROC
 	ret
 IGetPolygonPointList ENDP
 
-;µ¯³ö¶Ô»°¿òÊäÈëÎÄ×Ö
+;å¼¹å‡ºå¯¹è¯æ¡†è¾“å…¥æ–‡å­—
 ICallTextDialog PROC hWnd:HWND, uMsg:UINT, wParam:WPARAM, lParam:LPARAM
     mov ebx,uMsg
     .IF ebx == WM_COMMAND
         invoke IHandleTextDialog,hWnd,wParam,lParam
     .ELSE 
-		;Ä¬ÈÏ´¦Àí
+		;é»˜è®¤å¤„ç†
         invoke DefWindowProc,hWnd,uMsg,wParam,lParam 
         ret 
     .ENDIF 
@@ -533,7 +533,7 @@ ICallTextDialog PROC hWnd:HWND, uMsg:UINT, wParam:WPARAM, lParam:LPARAM
     ret
 ICallTextDialog endp
 
-;½«¶Ô»°¿òÊäÈëÎÄ×Ö´æ´¢£¬ÓÃÓÚ»æÖÆ
+;å°†å¯¹è¯æ¡†è¾“å…¥æ–‡å­—å­˜å‚¨ï¼Œç”¨äºç»˜åˆ¶
 IHandleTextDialog PROC hWnd:HWND,wParam:WPARAM,lParam:LPARAM
     mov ebx,wParam
     and ebx,0ffffh
