@@ -75,7 +75,9 @@ ICreateMenu PROC
 	INVOKE AppendMenu, DrawMenu, MF_STRING, IDM_DRAW, ADDR PaintMenuString
 	INVOKE AppendMenu, DrawMenu, MF_STRING, IDM_ERASE, ADDR EraseMenuString
 	INVOKE AppendMenu, DrawMenu, MF_STRING, IDM_TEXT, ADDR TextMenuString
-	
+	INVOKE AppendMenu, DrawMenu, MF_STRING, IDM_LINE_SIZE, ADDR LineSizeString
+	INVOKE AppendMenu, DrawMenu, MF_STRING, IDM_ERASER_SIZE, ADDR EraserSizeString
+
 	INVOKE AppendMenu, hMenu, MF_POPUP, FrameMenu, ADDR FrameMenuString
 	INVOKE AppendMenu, FrameMenu, MF_POPUP, LineMenu, ADDR LineMenuString
 	
@@ -118,4 +120,84 @@ ICreateMenu PROC
 	INVOKE AppendMenu, hMenu, MF_POPUP, SettingsMenu, ADDR SettingsMenuString
 	ret  
 ICreateMenu ENDP
+
+
+;设置橡皮大小
+IHandleEraserSize PROC, hWnd:HWND
+	extern hInstance:HINSTANCE
+	invoke DialogBoxParam, hInstance, IDD_DIALOG2 ,hWnd, OFFSET ICallEraserDialog, 0
+	ret
+IHandleEraserSize ENDP
+
+;弹出对话框输入橡皮大小
+ICallEraserDialog PROC hWnd:HWND, uMsg:UINT, wParam:WPARAM, lParam:LPARAM
+    mov ebx,uMsg
+    .IF ebx == WM_COMMAND
+        invoke IHandleEraserDialog,hWnd,wParam,lParam
+    .ELSE 
+		;默认处理
+        invoke DefWindowProc,hWnd,uMsg,wParam,lParam 
+        ret 
+    .ENDIF 
+    xor eax,eax 
+    ret
+ICallEraserDialog endp
+
+;将对话框输入橡皮大小存储，用于绘制
+IHandleEraserDialog PROC hWnd:HWND,wParam:WPARAM,lParam:LPARAM
+    mov ebx,wParam
+    and ebx,0ffffh
+    .IF ebx == IDOK
+        invoke GetDlgItemInt,hWnd,IDC_EDIT2, NULL, 0
+		.IF eax >= 5 && eax <= 50
+			mov EraserRadius, eax
+		.ENDIF
+        invoke EndDialog,hWnd,wParam
+    .ELSEIF ebx == IDCANCEL
+        invoke EndDialog,hWnd,wParam
+        mov eax,TRUE
+    .ENDIF
+    ret
+IHandleEraserDialog ENDP
+
+;设置画笔大小
+IHandlePainterSize PROC, hWnd:HWND
+	extern hInstance:HINSTANCE
+	invoke DialogBoxParam, hInstance, IDD_DIALOG3 ,hWnd, OFFSET ICallPainterDialog, 0
+	ret
+IHandlePainterSize ENDP
+
+;弹出对话框输入画笔大小
+ICallPainterDialog PROC hWnd:HWND, uMsg:UINT, wParam:WPARAM, lParam:LPARAM
+    mov ebx,uMsg
+    .IF ebx == WM_COMMAND
+        invoke IHandlePainterDialog,hWnd,wParam,lParam
+    .ELSE 
+		;默认处理
+        invoke DefWindowProc,hWnd,uMsg,wParam,lParam 
+        ret 
+    .ENDIF 
+    xor eax,eax 
+    ret
+ICallPainterDialog endp
+
+;将对话框输入画笔大小存储，用于绘制
+IHandlePainterDialog PROC hWnd:HWND,wParam:WPARAM,lParam:LPARAM
+	extern PenWidth:DWORD
+
+    mov ebx,wParam
+    and ebx,0ffffh
+    .IF ebx == IDOK
+        invoke GetDlgItemInt,hWnd,IDC_EDIT3, NULL, 0
+		.IF eax >= 1 && eax <= 10
+			mov PenWidth, eax
+		.ENDIF
+        invoke EndDialog,hWnd,wParam
+    .ELSEIF ebx == IDCANCEL
+        invoke EndDialog,hWnd,wParam
+        mov eax,TRUE
+    .ENDIF
+    ret
+IHandlePainterDialog ENDP
+
 end

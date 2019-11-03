@@ -50,7 +50,7 @@ CurrentPointListY DWORD 100 DUP(?)
 ;实际画多边形的参数
 CurrentPointList DWORD 200 DUP(?)
 ;判断两点是否接近的Threshold
-SameThreshold DWORD 2
+SameThreshold DWORD 4
 
 ;显示的文字
 ShowString BYTE 100 dup(?)
@@ -97,6 +97,7 @@ IText PROC, hdc:HDC,hWnd:HWND
 	pop ecx
 	pop edx
 	INVOKE TextOutA, hdc, edx, ecx, ADDR ShowString, eax
+	mov ShowString, 0
 	ret
 IText ENDP
 

@@ -64,6 +64,12 @@ ICreateMenu					PROTO ;建立菜单
 
 IHandleColor				PROTO :HWND, :DWORD
 IHandleFont					PROTO :HWND
+IHandleEraserSize			PROTO :HWND
+ICallEraserDialog			PROTO :HWND, :UINT, :WPARAM, :LPARAM
+IHandleEraserDialog			PROTO :HWND, :WPARAM, :LPARAM
+IHandlePainterSize			PROTO :HWND
+ICallPainterDialog			PROTO :HWND, :UINT, :WPARAM, :LPARAM
+IHandlePainterDialog		PROTO :HWND, :WPARAM, :LPARAM
 
 ;定义各种常量
 .data
@@ -78,10 +84,15 @@ IHandleFont					PROTO :HWND
 
 	;资源文件
 	IDD_DIALOG1				WORD 104
+	IDD_DIALOG2				WORD 106
+	IDD_DIALOG3				WORD 107
 	IDC_EDIT1				WORD 1001
+	IDC_EDIT2				WORD 1003
+	IDC_EDIT3				WORD 1004
 	IDC_TEXTCURSOR			DWORD 103
 	IDC_ERASERCURSOR		DWORD 101
 	IDC_PAINTCURSOR			DWORD 102
+
 
 	;上方菜单栏各种编号
 	IDM_FILE_MENU			WORD 301
@@ -114,7 +125,7 @@ IHandleFont					PROTO :HWND
 	IDM_SAVE				WORD 411
 	IDM_LOAD				WORD 412
 	;Color
-	IDM_BRUSH_COLOR	WORD 413
+	IDM_BRUSH_COLOR			WORD 413
 	IDM_PEN_COLOR			WORD 414
 	IDM_FONT				WORD 415
 
@@ -126,6 +137,10 @@ IHandleFont					PROTO :HWND
 	IDM_CROSS_BRUSH 		WORD 4164
 	IDM_HORIZ_BRUSH			WORD 4165
 	IDM_VERTI_BRUSH			WORD 4166
+
+	;设置线宽和橡皮大小
+	IDM_LINE_SIZE			WORD 417
+ 	IDM_ERASER_SIZE         WORD 418		
 
 	;当前模式的编号
 	IDM_MODE_DRAW				DWORD 500
@@ -159,6 +174,8 @@ IHandleFont					PROTO :HWND
 		PaintMenuString			BYTE "画图", 0
 		EraseMenuString			BYTE "擦除", 0
 		TextMenuString			BYTE "文字", 0
+		LineSizeString			BYTE "画笔宽度", 0
+		EraserSizeString		BYTE "橡皮擦大小", 0
 
 	FrameMenuString			BYTE "框架绘制工具", 0
 		LineMenuString			BYTE "直线", 0
@@ -202,7 +219,6 @@ IHandleFont					PROTO :HWND
 
 	PenColor 				DWORD 0ffh
 	PenStyle				DWORD PS_SOLID ;PS_SOLID == 0
-	PenWidth				DWORD 1		   ;If PenStyle != PS_SOLID, PenWidth <= 1
 	BrushColor 				DWORD 0ffffffh ;Fill Rect with BrushColor
 	BrushMode				DWORD 0
 		SOLID_BRUSH 		DWORD 0
@@ -212,6 +228,17 @@ IHandleFont					PROTO :HWND
 	
 	LogicFont				LOGFONT <> 
     CurrentFont				HFONT	0
+
+	
+	; 保存有关
+	fileType byte "BMP(*.bmp)", 0, 0
+	fileType2 byte "BMP(*.bmp)", 0 ,"*.bmp", 0, 0
+	extenName byte "bmp", 0
+
+
+	rsFileName	db	1000 DUP (?)
+	rsTitleName	db	1000 DUP (?)
+	rsFile OPENFILENAME <>
 
 
 

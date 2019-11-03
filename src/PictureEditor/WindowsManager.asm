@@ -7,14 +7,33 @@ option casemap:none
 
 include Define.inc
 
+public PenWidth
+
+.data
+PenWidth DWORD 1		   ;If PenStyle != PS_SOLID, PenWidth <= 1
+
 .code
 ;处理WM_COMMAND(菜单点击)导致的模式变化
 IHandleModeChange PROC USES ebx ecx,
 	hWnd:HWND,wParam:WPARAM,lParam:LPARAM
+	LOCAL hdc: HDC
+	LOCAL hdcBM: HDC
+	LOCAL hbm: HBITMAP
+	LOCAL bm: BITMAP
+	LOCAL bmInfo: BITMAPINFOHEADER;位图文件信息头
+	LOCAL bmFile: BITMAPFILEHEADER;位图文件头
+	LOCAL numColor: DWORD;调色盘颜色种类
+	LOCAL rgbSize:DWORD;调色板大小
+	LOCAL bitmapSize:DWORD;位图大小
+	LOCAL hg:HGLOBAL;分配空间句柄
+	LOCAL spacePtr:DWORD;储存空间的首地址指针
+	LOCAL numByte:DWORD;写入字节数
+	LOCAL fileHandle:DWORD;文件句柄
 	push ebx
 	push ecx
 	extern CurrentMode:DWORD
 	extern CurrentPointNum:DWORD
+
 	mov ebx, wParam
 	mov CurrentPointNum, 0
 	mov ecx, CurrentMode
@@ -89,6 +108,202 @@ IHandleModeChange PROC USES ebx ecx,
 			push HS_VERTICAL
 		.ENDIF
 		pop HatchStyle
+	.ELSEIF bx == IDM_LINE_SIZE
+		INVOKE IHandlePainterSize, hWnd
+	.ELSEIF bx == IDM_ERASER_SIZE
+		INVOKE IHandleEraserSize, hWnd
+
+	.ELSEIF bx == IDM_LOAD
+		push edx
+		mov rsFile.hwndOwner, NULL
+		mov rsFile.nFilterIndex, 1
+		mov rsFile.lpstrFileTitle, NULL
+		mov rsFile.nMaxFileTitle, 0
+		mov rsFile.lpstrInitialDir, NULL ;
+		mov rsFile.Flags,  OFN_PATHMUSTEXIST AND OFN_FILEMUSTEXIST
+
+		mov edx, sizeof rsFile
+		mov rsFile.lStructSize, edx
+		mov rsFile.lpstrFile, OFFSET rsFileName;			
+		mov edx, sizeof rsFileName
+		mov rsFile.nMaxFile, edx
+		mov rsFile.lpstrFilter, OFFSET fileType2
+		pop edx
+		INVOKE GetOpenFileName, ADDR rsFile
+		INVOKE GetDC, hWnd
+		mov hdc, eax
+		invoke CreateCompatibleDC, hdc
+		mov hdcBM, eax
+		invoke LoadImage, NULL, ADDR rsFileName, IMAGE_BITMAP, ScreenWidth, ScreenLength, LR_LOADFROMFILE
+		mov hbm, eax
+		invoke SelectObject, hdcBM, eax
+		invoke BitBlt, hdc, 0, 0,  ScreenWidth, ScreenLength, hdcBM, 0, 0, SRCCOPY
+		invoke DeleteObject, hbm
+		invoke DeleteDC, hdcBM
+
+	.ELSEIF bx == IDM_SAVE
+		pushad
+		mov edx, sizeof rsFile
+		mov rsFile.lStructSize, edx ;文件大小
+		mov rsFile.lpstrFile, OFFSET rsFileName ;文件名,包含驱动器和路径
+		mov rsFile.lpstrFileTitle, OFFSET rsTitleName ;仅包含文件名和扩展名
+		mov edx, sizeof rsFileName
+		mov rsFile.nMaxFile, edx;文件名最大长度
+		mov rsFile.lpstrFilter, OFFSET fileType ;过滤器（扩展名）
+		mov rsFile.lpstrDefExt, OFFSET extenName ;默认扩展名
+		mov rsFile.Flags, OFN_OVERWRITEPROMPT
+		popad
+		
+		pushad
+		INVOKE GetSaveFileName, ADDR rsFile;获取文件路径和信息，文件可以不存在
+		INVOKE GetDC, hWnd ;获取当前窗口句柄
+		mov hdc, eax
+
+		INVOKE CreateCompatibleBitmap, hdc, ScreenWidth, ScreenLength;创建位图
+		mov hbm, eax
+		INVOKE CreateCompatibleDC, hdc;创建上下文环境
+		mov hdcBM, eax
+
+		INVOKE SelectObject, hdcBM, hbm ;将位图移到该上下文环境中
+		INVOKE BitBlt, hdcBM, 0, 0, ScreenWidth, ScreenLength, hdc, 0, 0, SRCCOPY;将原窗口环境中的像素块整体拷贝到新建立的环境中
+	
+		INVOKE GetObject, hbm, (sizeof BITMAP), ADDR bm ;获取位图信息
+
+		
+		popad
+
+		;位图信息头的初始化
+		pushad
+		mov bmInfo.biSize, (sizeof bmInfo);结构大小
+		mov edx, bm.bmWidth
+		mov bmInfo.biWidth, edx;位图文件的宽度
+		mov edx, bm.bmHeight
+		mov bmInfo.biHeight, edx;位图文件的高度
+		mov bmInfo.biPlanes, 1;位图层数，总为1
+		mov dx, bm.bmBitsPixel
+		mov bmInfo.biBitCount, dx;位图色深
+		mov bmInfo.biCompression, BI_RGB;压缩方式
+		mov bmInfo.biSizeImage, 0;位图大小
+		mov bmInfo.biXPelsPerMeter, 0;水平分辨率
+		mov bmInfo.biYPelsPerMeter, 0;垂直分辨率
+		mov bmInfo.biClrUsed, 0 ;使用所有颜色
+		mov bmInfo.biClrImportant, 0 ;所有颜色重要
+		popad
+
+		;位图文件由位图文件头、位图信息头、调色板和位图数据组成
+
+		;计算位图数据大小
+		pushad
+		mov eax, bm.bmWidth
+		mov edx, 0
+		mov dx, bmInfo.biBitCount
+		imul eax, edx
+		;保证是四字节的整数倍
+		mov ebx, 32
+		mov edx, 0
+		add eax, 31
+		idiv ebx
+		imul eax, bm.bmHeight
+		imul eax, 4
+		mov bitmapSize, eax
+		popad
+
+		;计算调色板大小
+		;色深小于等于8位，调色板颜色数是2的色深次方，大于8位无调色板
+		pushad
+		.IF bm.bmBitsPixel > 8
+			push edx
+			mov edx, 0
+			mov numColor, edx
+			pop edx
+		.ELSE
+			pushad
+			mov edx, 1
+			mov ecx, 0
+			mov cx, bm.bmBitsPixel
+			shl edx, cl
+			mov numColor, edx
+			popad
+		.ENDIF
+		mov edx, numColor
+		imul edx, sizeof RGBQUAD
+		mov rgbSize, edx
+		popad
+
+		;存储空间分配与数据转移
+		pushad
+
+		mov edx, bitmapSize
+		add edx, sizeof bmInfo
+		add edx, rgbSize
+		;分配edx大小的动态空间
+		INVOKE GlobalAlloc, GHND, edx
+		mov hg, eax
+		;锁定动态空间，返回首地址
+		INVOKE GlobalLock, hg
+		mov spacePtr, eax
+
+		mov eax, sizeof bmInfo
+		lea ebx, bmInfo
+		mov edx, spacePtr
+
+	copydata:
+		mov eax, [ebx]
+		mov [edx], eax
+		add ebx, TYPE DWORD
+		add edx, TYPE DWORD
+		sub eax, TYPE DWORD
+		cmp eax, 0
+		jne copydata
+
+		popad
+	
+		pushad
+		mov edx, spacePtr
+		add edx, sizeof bmInfo
+		add edx, rgbSize
+		INVOKE GetDIBits, hdc, hbm, 0, bmInfo.biHeight, edx, spacePtr, DIB_RGB_COLORS
+		popad
+
+		;设置位图文件头的信息
+		pushad
+		mov bmFile.bfType, 4D42h
+		mov edx, sizeof bmFile
+		add edx, sizeof bmInfo
+		add edx, rgbSize
+		mov bmFile.bfOffBits, edx
+		add edx, bitmapSize
+		mov bmFile.bfSize, edx
+		mov bmFile.bfReserved1, 0
+		mov bmFile.bfReserved2, 0
+
+		;建立保存文件
+		INVOKE CreateFile,
+			ADDR rsFileName,
+			GENERIC_WRITE,
+			0,
+			NULL,
+			CREATE_ALWAYS,
+			FILE_ATTRIBUTE_NORMAL,
+			NULL
+		mov fileHandle, eax
+		popad
+
+
+		pushad
+		
+		;将内容写入文件
+		INVOKE WriteFile, fileHandle, ADDR bmFile, sizeof bmFile, ADDR numByte, NULL
+		popad
+		pushad
+		mov edx, bmFile.bfSize
+		sub edx, sizeof bmFile
+		INVOKE WriteFile, fileHandle, spacePtr, edx, ADDR numByte, NULL
+		popad
+		pushad
+		INVOKE GlobalFree, hg
+		INVOKE CloseHandle, fileHandle
+		popad
 	.ENDIF
 	mov CurrentMode, ecx
 	pop ecx
@@ -259,6 +474,7 @@ IHandlePaint PROC USES ecx,
 	mov ecx, CurrentMode
 	.IF ecx == IDM_MODE_DRAW || ecx==IDM_MODE_LINE || ecx==IDM_MODE_RECTANGLE_FRAME || ecx==IDM_MODE_POLYGON_FRAME || ecx==IDM_MODE_TRIANGLE0_FRAME || ecx==IDM_MODE_TRIANGLE1_FRAME
 		push ecx
+		;mov edi, PenWidth
 		INVOKE CreatePen, PenStyle, PenWidth, PenColor
 		mov hPen, eax
 		INVOKE SelectObject, ps.hdc, hPen
