@@ -74,6 +74,22 @@
   + 颜色截图
   
   <img src="choosecolor.png" style="zoom:50%;" />
+  
++ 文件保存
+
+  + 文件保存：IHandleModeChange（）内直接实现
+  > 1. 支持将画布内容保存为BMP图片格式；
+  > 2. 认识到BMP图片格式文件由位图文件头、信息头、调色板和位图数据四部分组成；
+  > 3. 通过CreateCompatibleBitmap、CreateCompatibleDC、SelectObject、BitBlt等多个函数将窗口中的位图信息转移到自己创建的环境中的位图上，再通过GetObject函数即可获取到位图信息，再利用GetDIBits函数将位图信息转移到分配的内存中区；
+  > 4. 根据位图信息中像素、色深等信息完成位图文件头、信息头和调色板相关数据计算，同时给文件头和信息头赋上合适的值；
+  > 5. 通过CreateFile和WriteFile函数即可完成文件的创建和信息的传入
+  
++ 文件读取
+
+  + 文件读取：IHandleModeChange（）内直接实现
+  > 1. 通过LoadImage函数载入bmp图片文件；
+  > 2. 再通过BitBlt将位图信息传输到窗口，即可对以前保存的文件进行进一步绘制；
+ 
 
 ### 3. 难点和创新点
 
@@ -106,6 +122,24 @@
 > ```assembly
 > invoke DeleteObject,hPen;此外，必须Delete掉新创造的句柄，否则会出现一些奇怪的错误 
 > ```
+
++ 如何获取窗口中的位图信息？
+
+> 这需要用到win32多个函数的帮助；
+>
+> 首先要考虑如何能够将窗口的位图信息移出来编程可以使用的数据；
+>
+> 通过CreateCompatibleBitmap、CreateCompatibleDC可以创建一个新的位图和上下文环境；
+>
+> 再通过SelectObject即可将新创建的位图移到新创建的上下文环境中；
+>
+> GetDC可以获取窗口句柄，BitBlt即可通过该句柄将其位图信息覆盖新创建的位图，达到取出位图信息的功能；
+>
+> GetObject则通过该位图信息获得BITMAP形式的信息加以利用；
+> 
+> 而GetDIBits函数最后将位图信息直接移到分配的内存中，这样就可以直接输出位图信息了。
+
+
 
 ### 4. 小组分工
 
