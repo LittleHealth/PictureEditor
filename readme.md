@@ -55,7 +55,9 @@ typora-root-url: ./
   
   + 截图如下，有画笔绘制，各种线，各种线框，各种图形，橡皮擦，文字
   
-    ![paint](/paint.png)
+    ![paint](doc/paint.png)
+  
+  ![](doc/hatchstyle.png)
   
 + 文本
 
@@ -69,7 +71,7 @@ typora-root-url: ./
 >  4. CurrentFont作为全局句柄变量无需Delete。
 >  5. 截图：
 
-  <img src="choosefont.png" style="zoom:50%;" />
+  <img src="doc/choosefont.png" style="zoom: 50%;" /> <img src="doc/font.png" style="zoom: 25%;" />
 
 + 颜色
 
@@ -81,7 +83,7 @@ typora-root-url: ./
   
   + 颜色截图
   
-  <img src="choosecolor.png" style="zoom:50%;" />
+  <img src="doc/choosecolor.png" style="zoom:50%;" />
   
   橡皮大小和线宽度选择
   
@@ -95,9 +97,9 @@ typora-root-url: ./
   
   - 截图
   
-  ![dialog](/dialog.png)
+  ![dialog](doc/dialog.png)
   
-  ![size](/size.png)
+  ![size](doc/size.png)
   
   文件保存
   
@@ -116,9 +118,9 @@ typora-root-url: ./
   
   
   
-  ![load](/load.png)
+  ![load](doc/load.png)
   
-  ![save](/save.png)
+  ![save](doc/save.png)
 
 ### 3. 难点和创新点
 
